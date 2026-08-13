@@ -1,0 +1,20 @@
+JDBank/
+├── app/
+│   ├── __init__.py          # пакет приложения
+│   ├── main.py              # FastAPI-приложение, Jinja2-шаблоны, статика
+│   ├── config.py            # конфигурация: SQLite локально / PostgreSQL на Render (DATABASE_URL)
+│   ├── database.py          # engine, SessionLocal, Base, get_db, init_db
+│   ├── models.py            # SQLAlchemy-модели: User, Account, Transaction
+│   ├── routes/              # эндпоинты (Этап 2)
+│   │   ├── __init__.py
+│   │   ├── auth.py          # login / register / logout
+│   │   ├── accounts.py      # CRUD счетов
+│   │   └── transactions.py  # CRUD транзакций
+│   ├── templates/           # Jinja2 (Этап 3)
+│   │   └── base.html
+│   └── static/              # CSS/JS (Этап 3)
+│       └── style.css
+├── requirements.txt
+├── run.py                   # запуск: python run.py
+├── jdbank.db                # SQLite-БД (создаётся автоматически в app/)
+└── Промпт.txt

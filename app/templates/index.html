@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block title %}Главная — JDBank{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-8">
+
+    <div class="grid lg:grid-cols-5 gap-6">
+
+        <section class="lg:col-span-3">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-bold">Счета</h2>
+            </div>
+
+            {% if accounts %}
+            <div class="grid sm:grid-cols-2 gap-3">
+                {% for account in accounts %}
+                <div class="border border-neutral-200 rounded-xl p-4">
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="min-w-0">
+                            <p class="font-medium truncate">{{ account.name }}</p>
+                            <p class="text-xs text-neutral-400 uppercase tracking-wide">{{ account.currency }}</p>
+                        </div>
+                        <form method="post" action="/accounts/{{ account.id }}/delete"
+                              onsubmit="return confirm('Удалить счёт «{{ account.name }}» и все его транзакции?')">
+                            <button class="text-neutral-300 hover:text-red-500 text-sm" title="Удалить">✕</button>
+                        </form>
+                    </div>
+                    <p class="text-2xl font-bold mt-2 {{ 'text-emerald-600' if account.balance > 0 else '' }}">
+                        {{ account.balance | money }} <span class="text-sm font-medium text-neutral-400">{{ account.currency }}</span>
+                    </p>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="border border-dashed border-neutral-300 rounded-xl p-8 text-center text-sm text-neutral-400">
+                Пока нет счетов. Создайте первый счёт — например «Наличные» или «Карта BYN».
+            </div>
+            {% endif %}
+
+            <form method="post" action="/accounts/create" class="mt-4 flex flex-col sm:flex-row gap-2">
+                <input type="text" name="name" required maxlength="100" placeholder="Название счёта (например: Карта BYN)"
+                       class="flex-1 border border-neutral-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                <input type="text" name="currency" required maxlength="10" placeholder="Валюта (BYN, USD, BTC)"
+                       class="sm:w-40 border border-neutral-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary uppercase">
+                <button type="submit"
+                        class="bg-primary hover:bg-primary-dark text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors whitespace-nowrap">+ Создать счёт</button>
+            </form>
+        </section>
+
+        <section class="lg:col-span-2">
+            <h2 class="text-lg font-bold mb-4">
+                <span id="form-title">Новая транзакция</span>
+                <button id="form-reset" onclick="resetForm()" class="hidden ml-2 text-xs text-neutral-400 hover:text-neutral-700">сбросить</button>
+            </h2>
+
+            <form id="tx-form" method="post" action="/transactions/create"
+                  class="border border-neutral-200 rounded-xl p-4 space-y-3" onsubmit="return validateTxForm()">
+                <div class="grid grid-cols-3 gap-2 text-sm">
+                    {% for t, label in [('income', 'Доход'), ('expense', 'Расход'), ('transfer', 'Перевод')] %}
+                    <button type="button" onclick="setType('{{ t }}')" data-type-btn="{{ t }}"
+                            class="border rounded-lg py-1.5 font-medium transition-colors">{{ label }}</button>
+                    {% endfor %}
+                </div>
+                <input type="hidden" name="tx_type" id="tx-type" value="income">
+
+                <div id="row-from" class="hidden">
+                    <label class="block text-xs font-medium text-neutral-500 mb-1">Счёт-источник</label>
+                    <select name="account_from" id="tx-from"
+                            class="w-full border border-neutral-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                        <option value="">— выберите —</option>
+                        {% for account in accounts %}
+                        <option value="{{ account.id }}">{{ account.name }} ({{ account.currency }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div id="row-to">
+                    <label class="block text-xs font-medium text-neutral-500 mb-1">Счёт</label>
+                    <select name="account_to" id="tx-to"
+                            class="w-full border border-neutral-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                        <option value="">— выберите —</option>
+                        {% for account in accounts %}
+                        <option value="{{ account.id }}">{{ account.name }} ({{ account.currency }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-medium text-neutral-500 mb-1">Сумма</label>
+                        <input type="number" name="amount" id="tx-amount" required step="0.01" min="0.01" placeholder="0.00"
+                               class="w-full border border-neutral-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-neutral-500 mb-1">Дата/время</label>
+                        <input type="datetime-local" name="date_time" id="tx-datetime"
+                               class="w-full border border-neutral-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-medium text-neutral-500 mb-1">Категория</label>
+                        <input type="text" name="category" id="tx-category" list="categories" maxlength="100"
+                               class="w-full border border-neutral-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                        <datalist id="categories">
+                            <option value="Еда"><option value="Зарплата"><option value="Транспорт">
+                            <option value="Жильё"><option value="Развлечения"><option value="Здоровье">
+                            <option value="Крипто"><option value="Прочее">
+                        </datalist>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-neutral-500 mb-1">Комментарий</label>
+                        <input type="text" name="comment" id="tx-comment" maxlength="500"
+                               class="w-full border border-neutral-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                    </div>
+                </div>
+
+                <button type="submit" id="tx-submit"
+                        class="w-full bg-primary hover:bg-primary-dark text-white font-medium py-2 rounded-lg transition-colors">Добавить</button>
+            </form>
+        </section>
+    </div>
+
+    <section class="mt-10">
+        <h2 class="text-lg font-bold mb-4">Последние транзакции</h2>
+        {% if transactions %}
+        <div class="border border-neutral-200 rounded-xl overflow-x-auto">
+            <table class="w-full text-sm min-w-[640px]">
+                <thead>
+                    <tr class="text-left text-xs text-neutral-400 uppercase tracking-wide border-b border-neutral-200">
+                        <th class="px-4 py-3">Дата</th>
+                        <th class="px-4 py-3">Тип</th>
+                        <th class="px-4 py-3">Счёт</th>
+                        <th class="px-4 py-3">Категория</th>
+                        <th class="px-4 py-3">Сумма</th>
+                        <th class="px-4 py-3"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tx in transactions %}
+                    <tr class="border-b border-neutral-100 last:border-0"
+                        data-id="{{ tx.id }}"
+                        data-type="{{ tx.type }}"
+                        data-amount="{{ tx.amount }}"
+                        data-from="{{ tx.account_from_id or '' }}"
+                        data-to="{{ tx.account_to_id or '' }}"
+                        data-category="{{ tx.category or '' }}"
+                        data-comment="{{ tx.comment or '' }}"
+                        data-datetime="{{ tx.date_time.strftime('%Y-%m-%dT%H:%M') }}">
+                        <td class="px-4 py-2.5 whitespace-nowrap text-neutral-500">{{ tx.date_time.strftime('%d.%m.%Y %H:%M') }}</td>
+                        <td class="px-4 py-2.5">
+                            {% if tx.type == 'income' %}<span class="text-emerald-600 font-medium">Доход</span>
+                            {% elif tx.type == 'expense' %}<span class="text-red-500 font-medium">Расход</span>
+                            {% else %}<span class="text-neutral-500 font-medium">Перевод</span>{% endif %}
+                        </td>
+                        <td class="px-4 py-2.5 text-neutral-700">
+                            {% if tx.account_from and tx.account_to %}
+                                {{ tx.account_from.name }} → {{ tx.account_to.name }}
+                            {% elif tx.account_to %}
+                                {{ tx.account_to.name }}
+                            {% elif tx.account_from %}
+                                {{ tx.account_from.name }}
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-2.5 text-neutral-500">{{ tx.category or '—' }}</td>
+                        <td class="px-4 py-2.5 whitespace-nowrap font-medium">
+                            {% if tx.type == 'income' %}<span class="text-emerald-600">+{{ tx.amount | money }}</span>
+                            {% elif tx.type == 'expense' %}<span class="text-red-500">−{{ tx.amount | money }}</span>
+                            {% else %}<span class="text-neutral-500">{{ tx.amount | money }}</span>{% endif %}
+                            <span class="text-xs text-neutral-400">
+                                {{ (tx.account_from.currency if tx.account_from else tx.account_to.currency) }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-2.5 whitespace-nowrap">
+                            <div class="flex gap-3 justify-end">
+                                <button onclick="editTx(this.closest('tr'))" class="text-primary hover:underline text-xs">Изменить</button>
+                                <form method="post" action="/transactions/{{ tx.id }}/delete"
+                                      onsubmit="return confirm('Удалить транзакцию?')">
+                                    <button class="text-neutral-400 hover:text-red-500 text-xs">Удалить</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="border border-dashed border-neutral-300 rounded-xl p-8 text-center text-sm text-neutral-400">
+            Транзакций пока нет.
+        </div>
+        {% endif %}
+    </section>
+</div>
+
+<script>
+    const TYPE_LABELS = { income: 'Доход', expense: 'Расход', transfer: 'Перевод' };
+    let currentType = 'income';
+
+    function setType(type) {
+        currentType = type;
+        document.getElementById('tx-type').value = type;
+        document.querySelectorAll('[data-type-btn]').forEach(btn => {
+            const active = btn.dataset.typeBtn === type;
+            btn.classList.toggle('bg-primary', active);
+            btn.classList.toggle('text-white', active);
+            btn.classList.toggle('border-primary', active);
+            btn.classList.toggle('text-neutral-500', !active);
+            btn.classList.toggle('hover:border-primary', !active);
+        });
+        document.getElementById('row-from').classList.toggle('hidden', type !== 'expense' && type !== 'transfer');
+        document.getElementById('row-to').querySelector('label').textContent =
+            type === 'transfer' ? 'Счёт-получатель' : 'Счёт';
+    }
+
+    function validateTxForm() {
+        const from = document.getElementById('tx-from');
+        const to = document.getElementById('tx-to');
+        if (currentType === 'transfer' && from.value === to.value) {
+            alert('Нельзя переводить на тот же счёт');
+            return false;
+        }
+        if (currentType === 'income' && !to.value) return false;
+        if (currentType === 'expense' && !from.value) return false;
+        return true;
+    }
+
+    function editTx(row) {
+        document.getElementById('form-title').textContent = 'Изменить транзакцию';
+        document.getElementById('form-reset').classList.remove('hidden');
+        const form = document.getElementById('tx-form');
+        form.action = '/transactions/' + row.dataset.id + '/edit';
+        document.getElementById('tx-submit').textContent = 'Сохранить';
+
+        setType(row.dataset.type);
+        document.getElementById('tx-from').value = row.dataset.from;
+        document.getElementById('tx-to').value = row.dataset.to;
+        document.getElementById('tx-amount').value = row.dataset.amount;
+        document.getElementById('tx-category').value = row.dataset.category;
+        document.getElementById('tx-comment').value = row.dataset.comment;
+        document.getElementById('tx-datetime').value = row.dataset.datetime;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetForm() {
+        document.getElementById('tx-form').reset();
+        document.getElementById('tx-form').action = '/transactions/create';
+        document.getElementById('tx-submit').textContent = 'Добавить';
+        document.getElementById('form-title').textContent = 'Новая транзакция';
+        document.getElementById('form-reset').classList.add('hidden');
+        setType('income');
+    }
+
+    setType('income');
+</script>
+{% endblock %}
