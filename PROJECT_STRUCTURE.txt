@@ -1,20 +1,44 @@
 JDBank/
 ├── app/
 │   ├── __init__.py          # пакет приложения
-│   ├── main.py              # FastAPI-приложение, Jinja2-шаблоны, статика
-│   ├── config.py            # конфигурация: SQLite локально / PostgreSQL на Render (DATABASE_URL)
+│   ├── main.py              # FastAPI-приложение, Jinja2-шаблоны, статика, /download
+│   ├── config.py            # конфигурация: SQLite локально / PostgreSQL на Render (DATABASE_URL); DATA_DIR для десктопа
 │   ├── database.py          # engine, SessionLocal, Base, get_db, init_db
 │   ├── models.py            # SQLAlchemy-модели: User, Account, Transaction
-│   ├── routes/              # эндпоинты (Этап 2)
+│   ├── deps.py              # зависимости: текущий пользователь, require_user
+│   ├── paths.py             # пути ресурсов (sys._MEIPASS для PyInstaller)
+│   ├── templating.py        # Jinja2: templates_dir, render
+│   ├── services/            # бизнес-логика
+│   │   ├── __init__.py
+│   │   └── balance.py       # пересчёт баланса счёта с нуля
+│   ├── routes/              # эндпоинты
 │   │   ├── __init__.py
 │   │   ├── auth.py          # login / register / logout
 │   │   ├── accounts.py      # CRUD счетов
 │   │   └── transactions.py  # CRUD транзакций
-│   ├── templates/           # Jinja2 (Этап 3)
-│   │   └── base.html
-│   └── static/              # CSS/JS (Этап 3)
+│   ├── templates/           # Jinja2
+│   │   ├── base.html        # + баннер «переехали на десктоп»
+│   │   ├── download.html    # страница /download
+│   │   ├── index.html
+│   │   ├── login.html
+│   │   └── register.html
+│   └── static/              # CSS
 │       └── style.css
+├── desktop/                 # десктопная версия (JDBank 3.0)
+│   ├── launcher.py          # pywebview + локальный uvicorn; JDBANK_SMOKE_TEST=1 для проверки без GUI
+│   └── JDBank.spec          # PyInstaller (onefile, hiddenimports uvicorn)
+├── .github/workflows/
+│   └── build-desktop.yml    # сборка exe/appimage/dmg на тег v* + релиз на GitHub
+├── tests/
+│   └── test_stage2.py       # 45 проверок Этапа 2
 ├── requirements.txt
+├── requirements-desktop.txt # + pywebview, pyinstaller
 ├── run.py                   # запуск: python run.py
-├── jdbank.db                # SQLite-БД (создаётся автоматически в app/)
+├── render.yaml              # Blueprint Render: сайт + PostgreSQL
 └── Промпт.txt
+
+Данные десктоп-приложения хранятся локально:
+  Windows: %APPDATA%\JDBank\  (обычно C:\Users\<пользователь>\AppData\Roaming\JDBank)
+  macOS:   ~/Library/Application Support/JDBank
+  Linux:   ~/.jdbank
+  Переопределение: переменная окружения JDBANK_DATA_DIR

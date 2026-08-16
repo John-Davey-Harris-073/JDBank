@@ -3,3 +3,7 @@ __pycache__/
 *.pyc
 app/jdbank.db
 .env
+build/
+dist/
+jdbank_smoke_result.txt
+jdbank_crash.txt

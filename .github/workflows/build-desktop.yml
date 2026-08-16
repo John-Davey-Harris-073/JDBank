@@ -1,0 +1,68 @@
+name: Build JDBank Desktop
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            asset: JDBank-Windows-x64.exe
+          - os: macos-latest
+            asset: JDBank-macOS
+          - os: ubuntu-latest
+            asset: JDBank-Linux-x86_64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Linux system deps (webkit)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-gi gir1.2-webkit2-4.1 gir1.2-gtk-3.0
+
+      - name: Install Python deps
+        run: pip install -r requirements-desktop.txt
+
+      - name: Build with PyInstaller
+        run: pyinstaller desktop/JDBank.spec --noconfirm --clean
+
+      - name: Rename artifact
+        shell: bash
+        run: |
+          cd dist
+          if [ -f "JDBank.exe" ]; then
+            mv JDBank.exe "${{ matrix.asset }}"
+          else
+            mv JDBank "${{ matrix.asset }}"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: dist/${{ matrix.asset }}
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/*
+          generate_release_notes: true

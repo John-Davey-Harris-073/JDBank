@@ -1,5 +1,3 @@
-import os
-
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -10,10 +8,9 @@ from .config import config
 from .database import get_db, init_db
 from .deps import RedirectToLogin, require_user
 from .models import Account, Transaction, User
+from .paths import static_dir
 from .routes import accounts, auth, transactions
 from .templating import templates
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 app = FastAPI(title="JDBank")
 
@@ -28,7 +25,7 @@ app.add_middleware(
 
 app.mount(
     "/static",
-    StaticFiles(directory=os.path.join(BASE_DIR, "static"), check_dir=False),
+    StaticFiles(directory=static_dir(), check_dir=False),
     name="static",
 )
 
@@ -51,6 +48,18 @@ def on_startup() -> None:
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/download", response_class=HTMLResponse)
+def download_page(request: Request, db: Session = Depends(get_db)):
+    user = None
+    user_id = request.session.get("user_id")
+    if user_id:
+        user = db.get(User, user_id)
+    return templates.TemplateResponse(
+        "download.html",
+        {"request": request, "user": user, "error": None, "success": None},
+    )
 
 
 @app.get("/", response_class=HTMLResponse)

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Скачать JDBank — десктопная версия{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-12">
+
+    <h1 class="text-3xl font-bold text-center">JDBank для компьютера</h1>
+    <p class="text-center text-neutral-500 mt-2 max-w-xl mx-auto">
+        Личный учёт финансов, который работает на вашем устройстве.
+        Все данные хранятся локально — без серверов, без облака, без посторонних глаз.
+    </p>
+
+    <div class="grid sm:grid-cols-3 gap-4 mt-10">
+
+        <div class="border border-neutral-200 rounded-xl p-6 text-center flex flex-col items-center">
+            <div class="w-14 h-14 rounded-xl bg-neutral-900 text-white flex items-center justify-center text-2xl font-bold mb-3">⊞</div>
+            <h2 class="font-bold">Windows</h2>
+            <p class="text-xs text-neutral-400 mt-1 mb-4">10 и 11, x64</p>
+            <a href="https://github.com/John-Davey-Harris-073/JDBank/releases/latest/download/JDBank-Windows-x64.exe"
+               class="bg-primary hover:bg-primary-dark text-white font-medium px-5 py-2 rounded-lg transition-colors">
+                Скачать .exe
+            </a>
+        </div>
+
+        <div class="border border-neutral-200 rounded-xl p-6 text-center flex flex-col items-center">
+            <div class="w-14 h-14 rounded-xl bg-neutral-900 text-white flex items-center justify-center text-2xl font-bold mb-3"></div>
+            <h2 class="font-bold">macOS</h2>
+            <p class="text-xs text-neutral-400 mt-1 mb-4">Intel и Apple Silicon</p>
+            <a href="https://github.com/John-Davey-Harris-073/JDBank/releases/latest/download/JDBank-macOS"
+               class="bg-primary hover:bg-primary-dark text-white font-medium px-5 py-2 rounded-lg transition-colors">
+                Скачать для macOS
+            </a>
+        </div>
+
+        <div class="border border-neutral-200 rounded-xl p-6 text-center flex flex-col items-center">
+            <div class="w-14 h-14 rounded-xl bg-neutral-900 text-white flex items-center justify-center text-2xl font-bold mb-3">🐧</div>
+            <h2 class="font-bold">Linux</h2>
+            <p class="text-xs text-neutral-400 mt-1 mb-4">x86_64 (GTK/WebKit)</p>
+            <a href="https://github.com/John-Davey-Harris-073/JDBank/releases/latest/download/JDBank-Linux-x86_64"
+               class="bg-primary hover:bg-primary-dark text-white font-medium px-5 py-2 rounded-lg transition-colors">
+                Скачать для Linux
+            </a>
+        </div>
+
+    </div>
+
+    <div class="mt-10 border border-neutral-200 rounded-xl p-6">
+        <h2 class="font-bold mb-3">Что изменилось</h2>
+        <ul class="text-sm text-neutral-600 space-y-2">
+            <li>• <b>Данные на вашем устройстве</b> — база в локальной папке, без интернета и серверов</li>
+            <li>• <b>Работает офлайн</b> — весь функционал учёта доступен без сети</li>
+            <li>• <b>Полная приватность</b> — ваши финансы не покидают компьютер</li>
+            <li>• <b>Тот же интерфейс</b> — счета, валюты, доходы/расходы/переводы, категории</li>
+        </ul>
+    </div>
+
+    <div class="mt-6 border border-neutral-200 rounded-xl p-6 text-sm text-neutral-600">
+        <h2 class="font-bold mb-3">Установка</h2>
+        <ul class="space-y-2">
+            <li><b>Windows:</b> скачать .exe и запустить. Если Windows SmartScreen предупредит — нажмите «Подробнее» → «Выполнить в любом случае» (приложение не подписано).</li>
+            <li><b>macOS:</b> скачать файл, правый клик → «Открыть» (обход Gatekeeper для неподписанных приложений).</li>
+            <li><b>Linux:</b> <code class="bg-neutral-100 px-1 rounded">chmod +x JDBank-Linux-x86_64</code> и запустить. Нужны GTK3 и WebKit2GTK.</li>
+        </ul>
+    </div>
+
+    <p class="text-center text-xs text-neutral-400 mt-8">
+        Ваши данные: база создаётся в профиле пользователя (Windows: %APPDATA%\JDBank,
+        macOS: ~/Library/Application Support/JDBank, Linux: ~/.jdbank).
+    </p>
+</div>
+{% endblock %}
