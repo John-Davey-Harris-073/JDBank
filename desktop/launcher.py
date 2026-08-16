@@ -42,14 +42,19 @@ def _start_server(port: int):
 
 
 def _smoke_test(port: int) -> None:
-    result = "FAIL: no response"
-    try:
-        with urllib.request.urlopen(f"http://127.0.0.1:{port}/health", timeout=10) as resp:
-            result = f"OK {resp.status} {resp.read().decode()}"
-    except Exception as exc:  # noqa: BLE001
-        result = f"FAIL: {exc}"
+    results = []
+    for path in ("/health", "/login", "/", "/download", "/static/style.css"):
+        try:
+            with urllib.request.urlopen(
+                f"http://127.0.0.1:{port}{path}", timeout=10
+            ) as resp:
+                results.append(f"{path} -> OK {resp.status}")
+        except urllib.error.HTTPError as exc:
+            results.append(f"{path} -> ERROR {exc.code}")
+        except Exception as exc:  # noqa: BLE001
+            results.append(f"{path} -> FAIL: {exc}")
     with open("jdbank_smoke_result.txt", "w", encoding="utf-8") as f:
-        f.write(result)
+        f.write("\n".join(results))
 
 
 def main() -> None:

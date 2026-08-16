@@ -8,7 +8,10 @@ a = Analysis(
     ["launcher.py"],
     pathex=[PROJECT_ROOT],
     binaries=[],
-    datas=[("../app/templates", "app/templates"), ("../app/static", "app/static")],
+    datas=[
+        (os.path.join(PROJECT_ROOT, "app", "templates"), "templates"),
+        (os.path.join(PROJECT_ROOT, "app", "static"), "static"),
+    ],
     hiddenimports=[
         "uvicorn.logging",
         "uvicorn.loops.auto",
